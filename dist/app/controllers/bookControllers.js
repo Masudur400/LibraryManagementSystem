@@ -16,6 +16,7 @@ exports.bookRoutes = void 0;
 const express_1 = __importDefault(require("express"));
 const zod_1 = require("zod");
 const bookModel_1 = __importDefault(require("../models/bookModel"));
+const errorHandleManage_1 = require("../../utils/errorHandleManage");
 exports.bookRoutes = express_1.default.Router();
 const BookSchema = zod_1.z.object({
     title: zod_1.z.string().min(1, "Title is required"),
@@ -54,16 +55,20 @@ exports.bookRoutes.post("/", (req, res) => __awaiter(void 0, void 0, void 0, fun
 }));
 exports.bookRoutes.get("/", (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     try {
-        const { filter, sortBy = "createdAt", sort = "asc", limit = "10", } = req.query;
+        const { filter, sortBy = "createdAt", sort = "asc", limit, } = req.query;
         const query = {};
         if (filter) {
             query.genre = filter.toString().toUpperCase();
         }
         const sortOrder = sort === "desc" ? -1 : 1;
-        const books = yield bookModel_1.default
-            .find(query)
-            .sort({ [sortBy]: sortOrder })
-            .limit(parseInt(limit));
+        let findQuery = bookModel_1.default.find(query).sort({ [sortBy]: sortOrder });
+        if (limit !== undefined) {
+            const parsedLimit = parseInt(limit);
+            if (!isNaN(parsedLimit) && parsedLimit > 0) {
+                findQuery = findQuery.limit(parsedLimit);
+            }
+        }
+        const books = yield findQuery;
         res.status(200).json({
             success: true,
             message: "Books retrieved successfully",
@@ -71,11 +76,7 @@ exports.bookRoutes.get("/", (req, res) => __awaiter(void 0, void 0, void 0, func
         });
     }
     catch (error) {
-        res.status(500).json({
-            success: false,
-            message: "Failed to retrieve books",
-            error: error instanceof Error ? error.message : "Unknown error",
-        });
+        (0, errorHandleManage_1.handleError)(res, 500, "Failed to retrieve books", error);
     }
 }));
 exports.bookRoutes.get("/:bookId", (req, res) => __awaiter(void 0, void 0, void 0, function* () {

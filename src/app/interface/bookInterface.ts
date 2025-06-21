@@ -8,4 +8,5 @@ export interface IBook  {
   available: boolean;
   createdAt: Date;
   updatedAt: Date;
+  updateAvailability():Promise<this>;
 } 

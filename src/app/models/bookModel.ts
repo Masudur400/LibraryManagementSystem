@@ -1,4 +1,4 @@
-import mongoose, { model, Schema } from "mongoose";
+import mongoose, { Schema } from "mongoose";
 import { IBook } from "../interface/bookInterface"; 
 
 const bookSchema = new Schema<IBook>(
@@ -46,5 +46,10 @@ const bookSchema = new Schema<IBook>(
     timestamps: true
   }
 );
+
+bookSchema.methods.updateAvailability = function () {
+  this.available = this.copies > 0;
+  return this.save();
+};
 
 export default mongoose.model<IBook>('Book', bookSchema);
