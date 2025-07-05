@@ -5,7 +5,7 @@ export interface IBook  {
   isbn: string;
   description?: string;
   copies: number;
-  available: boolean;
+  available: string;
   createdAt: Date;
   updatedAt: Date;
   updateAvailability():Promise<this>;

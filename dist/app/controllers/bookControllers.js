@@ -25,7 +25,7 @@ const BookSchema = zod_1.z.object({
     isbn: zod_1.z.string().min(1, "ISBN is required"),
     description: zod_1.z.string().optional(),
     copies: zod_1.z.number().min(0, "Copies must be a positive number"),
-    available: zod_1.z.boolean(),
+    available: zod_1.z.string(),
 });
 exports.bookRoutes.post("/", (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     try {

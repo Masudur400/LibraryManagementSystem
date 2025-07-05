@@ -1,11 +1,15 @@
-import { Schema, model } from "mongoose";
-import { Iborrow } from "../interface/borrowInterface"; 
+import { Schema, model, Types } from "mongoose";
+import { IBorrow } from "../interface/borrowInterface";
 
-const borrowSchema = new Schema<Iborrow>(
+const borrowSchema = new Schema<IBorrow>(
   {
-    book: {
+    bookId: {
       type: Schema.Types.ObjectId,
       ref: "Book",
+      required: true,
+    },
+    buyerName: {
+      type: String,
       required: true,
     },
     quantity: {
@@ -13,9 +17,20 @@ const borrowSchema = new Schema<Iborrow>(
       required: true,
       min: [1, "At least one copy must be borrowed"],
     },
-    dueDate: {
-      type: Date,
+    bookTitle: {
+      type: String,
       required: true,
+    },
+    bookAuthor: {
+      type: String,
+      required: true,
+    },
+    genre: {
+      type: String,
+      required: true,
+    },
+    description: {
+      type: String,
     },
   },
   {
@@ -24,4 +39,4 @@ const borrowSchema = new Schema<Iborrow>(
   }
 );
 
-export default model<Iborrow>("Borrow", borrowSchema);
+export default model<IBorrow>("Borrow", borrowSchema);

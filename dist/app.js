@@ -6,8 +6,10 @@ Object.defineProperty(exports, "__esModule", { value: true });
 const express_1 = __importDefault(require("express"));
 const bookControllers_1 = require("./app/controllers/bookControllers");
 const borrowControllers_1 = require("./app/controllers/borrowControllers");
+const cors = require('cors');
 const app = (0, express_1.default)();
 app.use(express_1.default.json());
+app.use(cors());
 app.use("/api/books", bookControllers_1.bookRoutes);
 app.use("/api/borrow", borrowControllers_1.borrowRoutes);
 app.get('/', (req, res) => {

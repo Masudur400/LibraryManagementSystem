@@ -37,8 +37,8 @@ const bookSchema = new Schema<IBook>(
       default: 1
     },
     available: {
-      type: Boolean,
-      default: true
+      type: String,
+      default: ''
     }
   },
   {

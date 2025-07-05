@@ -1,15 +1,16 @@
-import express, { Request, Response } from "express"; 
-import bookModel from "../models/bookModel";
+import express, { Request, Response } from "express";
 import borrowModel from "../models/borrowModel";
-import { handleError } from "../../utils/errorHandleManage"; 
+import bookModel from "../models/bookModel";
+import { handleError } from "../../utils/errorHandleManage";
 
 export const borrowRoutes = express.Router();
 
+// Create borrow record
 borrowRoutes.post("/", async (req: Request, res: Response) => {
-  const { book, quantity, dueDate } = req.body;
+  const { bookId, buyerName, quantity } = req.body;
 
   try {
-    const foundBook = await bookModel.findById(book);
+    const foundBook = await bookModel.findById(bookId);
 
     if (!foundBook) {
       return handleError(res, 404, "Book not found");
@@ -20,9 +21,24 @@ borrowRoutes.post("/", async (req: Request, res: Response) => {
     }
 
     foundBook.copies -= quantity;
-    await foundBook.updateAvailability();
 
-    const borrow = await borrowModel.create({ book, quantity, dueDate });
+    if (typeof foundBook.updateAvailability === "function") {
+      await foundBook.updateAvailability();
+    } else {
+      await foundBook.save();
+    }
+
+    const borrowData = {
+      bookId: foundBook._id,
+      buyerName,
+      quantity,
+      bookTitle: foundBook.title,
+      bookAuthor: foundBook.author,
+      genre: foundBook.genre,
+      description: foundBook.description,
+    };
+
+    const borrow = await borrowModel.create(borrowData);
 
     res.status(201).json({
       success: true,
@@ -34,42 +50,17 @@ borrowRoutes.post("/", async (req: Request, res: Response) => {
   }
 });
 
+// Get all borrow records
 borrowRoutes.get("/", async (_req: Request, res: Response) => {
   try {
-    const summary = await borrowModel.aggregate([
-      {
-        $group: {
-          _id: "$book",
-          totalQuantity: { $sum: "$quantity" },
-        },
-      },
-      {
-        $lookup: {
-          from: "books",
-          localField: "_id",
-          foreignField: "_id",
-          as: "bookDetails",
-        },
-      },
-      { $unwind: "$bookDetails" },
-      {
-        $project: {
-          _id: 0,
-          book: {
-            title: "$bookDetails.title",
-            isbn: "$bookDetails.isbn",
-          },
-          totalQuantity: 1,
-        },
-      },
-    ]);
+    const allBorrows = await borrowModel.find();
 
     res.status(200).json({
       success: true,
-      message: "Borrowed books summary retrieved successfully",
-      data: summary,
+      message: "Borrow records retrieved successfully",
+      data: allBorrows,
     });
   } catch (error) {
-    handleError(res, 500, "Failed to retrieve summary", error);
+    handleError(res, 500, "Failed to retrieve borrow records", error);
   }
 });

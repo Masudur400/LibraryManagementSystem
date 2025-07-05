@@ -14,14 +14,15 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.borrowRoutes = void 0;
 const express_1 = __importDefault(require("express"));
-const bookModel_1 = __importDefault(require("../models/bookModel"));
 const borrowModel_1 = __importDefault(require("../models/borrowModel"));
+const bookModel_1 = __importDefault(require("../models/bookModel"));
 const errorHandleManage_1 = require("../../utils/errorHandleManage");
 exports.borrowRoutes = express_1.default.Router();
+// Create borrow record
 exports.borrowRoutes.post("/", (req, res) => __awaiter(void 0, void 0, void 0, function* () {
-    const { book, quantity, dueDate } = req.body;
+    const { bookId, buyerName, quantity } = req.body;
     try {
-        const foundBook = yield bookModel_1.default.findById(book);
+        const foundBook = yield bookModel_1.default.findById(bookId);
         if (!foundBook) {
             return (0, errorHandleManage_1.handleError)(res, 404, "Book not found");
         }
@@ -29,8 +30,22 @@ exports.borrowRoutes.post("/", (req, res) => __awaiter(void 0, void 0, void 0, f
             return (0, errorHandleManage_1.handleError)(res, 400, "Not enough copies available");
         }
         foundBook.copies -= quantity;
-        yield foundBook.updateAvailability();
-        const borrow = yield borrowModel_1.default.create({ book, quantity, dueDate });
+        if (typeof foundBook.updateAvailability === "function") {
+            yield foundBook.updateAvailability();
+        }
+        else {
+            yield foundBook.save();
+        }
+        const borrowData = {
+            bookId: foundBook._id,
+            buyerName,
+            quantity,
+            bookTitle: foundBook.title,
+            bookAuthor: foundBook.author,
+            genre: foundBook.genre,
+            description: foundBook.description,
+        };
+        const borrow = yield borrowModel_1.default.create(borrowData);
         res.status(201).json({
             success: true,
             message: "Book borrowed successfully",
@@ -41,42 +56,17 @@ exports.borrowRoutes.post("/", (req, res) => __awaiter(void 0, void 0, void 0, f
         (0, errorHandleManage_1.handleError)(res, 500, "Failed to borrow book", error);
     }
 }));
+// Get all borrow records
 exports.borrowRoutes.get("/", (_req, res) => __awaiter(void 0, void 0, void 0, function* () {
     try {
-        const summary = yield borrowModel_1.default.aggregate([
-            {
-                $group: {
-                    _id: "$book",
-                    totalQuantity: { $sum: "$quantity" },
-                },
-            },
-            {
-                $lookup: {
-                    from: "books",
-                    localField: "_id",
-                    foreignField: "_id",
-                    as: "bookDetails",
-                },
-            },
-            { $unwind: "$bookDetails" },
-            {
-                $project: {
-                    _id: 0,
-                    book: {
-                        title: "$bookDetails.title",
-                        isbn: "$bookDetails.isbn",
-                    },
-                    totalQuantity: 1,
-                },
-            },
-        ]);
+        const allBorrows = yield borrowModel_1.default.find();
         res.status(200).json({
             success: true,
-            message: "Borrowed books summary retrieved successfully",
-            data: summary,
+            message: "Borrow records retrieved successfully",
+            data: allBorrows,
         });
     }
     catch (error) {
-        (0, errorHandleManage_1.handleError)(res, 500, "Failed to retrieve summary", error);
+        (0, errorHandleManage_1.handleError)(res, 500, "Failed to retrieve borrow records", error);
     }
 }));

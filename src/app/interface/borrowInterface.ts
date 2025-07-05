@@ -1,9 +1,15 @@
 import { Types } from "mongoose";
 
-export interface Iborrow {
-  book: Types.ObjectId;  
+
+
+
+
+export interface IBorrow {
+  bookId: Types.ObjectId;
+  buyerName: string;
   quantity: number;
-  dueDate: Date;
-  createdAt: Date;
-  updatedAt: Date;
+  bookTitle: string;
+  bookAuthor: string;
+  genre: string;
+  description: string;
 }

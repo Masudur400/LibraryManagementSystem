@@ -12,7 +12,7 @@ const BookSchema = z.object({
     isbn: z.string().min(1, "ISBN is required"),
     description: z.string().optional(),
     copies: z.number().min(0, "Copies must be a positive number"),
-    available: z.boolean(),
+    available: z.string(),
 });
 
 bookRoutes.post("/", async (req: Request, res: Response) => {
